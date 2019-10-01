@@ -1,6 +1,9 @@
 [<img src="https://cdn.anychart.com/images/logo-transparent-segoe.png?2" width="234px" alt="AnyChart - Robust JavaScript/HTML5 Chart library for any project">](https://www.anychart.com)
-# AnyChart Elasticsearch Integration
+# AnyChart Elasticsearch  Integration
 This example presents to you how to use Anychart library with the search and analytics engine Ealsticsearch.
+
+## Note
+This project is modified to use new elasticsearch client js. Old sourcecode is move to File: server-legacy.js.
 
 ## Running
 
@@ -83,5 +86,3 @@ AnyChart Elasticksearch integration sample includes two parts:
 - AnyChart JavaScript library. It is released under Commercial license. You can test this plugin with the trial version of AnyChart. Our trial version is not limited by time and doesn't contain any feature limitations. Check details [here](https://www.anychart.com/buy/).
 
 If you have any questions regarding licensing - please contact us. <sales@anychart.com>
-
-[![Analytics](https://ga-beacon.appspot.com/UA-228820-4/Integrations/elasticsearch-template?pixel&useReferer)](https://github.com/igrigorik/ga-beacon)
