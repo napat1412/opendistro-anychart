@@ -25,6 +25,7 @@
   "author": "AnyChart <contact@anychart.com> (http://anychart.com)",
   "dependencies": {
     "elasticsearch": "^14.1.0",
+    "@elastic/elasticsearch": "^7.1.0",
     "express": "^4.15.3"
   }
 }

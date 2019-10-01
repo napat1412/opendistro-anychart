@@ -1,57 +1,98 @@
+'use strict'
+
 var express = require('express');
-var elasticsearch = require('elasticsearch');
 var fs = require('fs');
+const { Client } = require('@elastic/elasticsearch')
+//const client = new Client({ node: 'http://172.16.0.216:9200' })
+const client = new Client({
+  node: 'https://172.16.0.209:9200',
+  //headers: { 'Authorization': <JWT_TOKEN> },
+  // # Headers: JWT TOKEN
 
-//create an instance of the elasticsearch.Client class
-var client = new elasticsearch.Client({
-    host: 'localhost:9200',
-    log: 'trace'
-});
+  // # Headers: Basic Authentication
+  headers: { 'Authorization': 'Basic Ym90OmJvdGJvdA=='}, // bot:botbot
+  /*auth: {  // Failed;
+    username: 'bot',
+    password: 'botbot'
+  },*/
 
-//check Elastic node availability
-client.ping({
-    requestTimeout: 30000
-}, function (error) {
-    if (error) {
-        console.error('elasticsearch cluster is down!');
-    } else {
-        console.log('All is well');
-    }
-});
+  ssl: {
+    //ca: fs.readFileSync('./cacert.pem'),
+    rejectUnauthorized: false
+  }
+})
 
-//variable to store data from index
 var dataFromElastic = null;
-
-//search the index for required document
-client.search({
+async function run () {
+  // Let's start by indexing some data
+  /*
+  await client.index({
     index: 'testbase',
-    type: 'dataset'
-}).then(function (resp) {
-    //get the document from node's response
-    var hits = resp.hits.hits;
-    dataFromElastic = hits[0]._source.data;
-    console.log(dataFromElastic);
-}, function (err) {
-    console.trace(err.message);
-});
+    type: 'dataset', // uncomment this line if you are using Elasticsearch ≤ 6
+    body: {
+      data: [
+        {x: 'Apples', value: 128},
+        {x:'Oranges', value: 99},
+        {x:'Lemons', value: 54},
+        {x:'Bananas', value: 15}
+      ]
+    }
+  })
+  */
+
+  // here we are forcing an index refresh, otherwise we will not
+  // get any result in the consequent search
+  await client.indices.refresh({ index: 'testbase' })
+
+  // Let's search!
+  const { body } = await client.search({
+    index: 'testbase',
+    type: 'dataset', // uncomment this line if you are using Elasticsearch ≤ 6
+    body: {
+      query: {
+        match_all: {}
+      }
+    }
+  })
+
+  //console.log(body.hits.hits)
+  //console.log(body.hits.hits[0]._source.data)
+  dataFromElastic = body.hits.hits[0]._source.data
+}
+
+//run().catch(console.log)
 
 // Creates server instance
 var app = express();
-
+ 
 //create the HTML page and send to the host
-app.get('/', function (req, res) {
 
-    if (dataFromElastic) {
+var chartTemplate = fs.readFileSync(__dirname + '/index.html').toString();
+
+app.get('/', function (req, res) {
+    console.log("In express: HTTP GET, Path: /");
+    run().catch(console.log).then(function(result) {
+        console.log(dataFromElastic);
+        if (dataFromElastic) {
+            // For this demo we are using a fs.readFileSync and string replace methods to render the page,
+            // in real world application you might use one of the dozens Node.js templating engines.
+            var page = chartTemplate.replace("'{{data}}'", JSON.stringify(dataFromElastic));
+            res.send(page);
+        } else {
+            res.status(404);
+            res.send('Data not found');
+        }
+    });
+    /*if (dataFromElastic) {
 
         // For this demo we are using a fs.readFileSync and string replace methods to render the page,
         // in real world application you might use one of the dozens Node.js templating engines.
-        var chartTemplate = fs.readFileSync(__dirname + '/index.html').toString();
         var page = chartTemplate.replace("'{{data}}'", JSON.stringify(dataFromElastic));
         res.send(page);
     } else {
         res.status(404);
         res.send('Data not found');
-    }
+    }*/
 });
 
 
